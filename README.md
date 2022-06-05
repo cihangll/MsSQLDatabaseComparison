@@ -1,5 +1,10 @@
 # MsSQL Database Comparison
 
+- [.NET 6](https://github.com/dotnet/core)
+- [Blazor Server](https://dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor)
+- [MudBlazor](https://mudblazor.com)
+- [Dapper](https://github.com/DapperLib/Dapper)
+
 ## Goals 
 
 The goal of this repository is to compare 2 same mssql database instance.
