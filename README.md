@@ -26,7 +26,7 @@ Open `appsettings.json` file and change ConnectionStrings section. For example;
 }
 ```
 
-Execute the following command to open app.
+Execute the following command to run app.
 
 ```cmd
 cd .\MsSQLDatabaseComparison\
@@ -34,6 +34,8 @@ dotnet run
 ```
 
 ![image](https://user-images.githubusercontent.com/6229029/172060443-10e88fa3-8454-4fd5-a755-5bcd4e7811b3.png)
+
+You can open the application at https://localhost:5001.
 
 ## Application Features
 
