@@ -29,6 +29,7 @@ Open `appsettings.json` file and change ConnectionStrings section. For example;
 Execute the following command to open app.
 
 ```cmd
+cd .\MsSQLDatabaseComparison\
 dotnet run
 ```
 
