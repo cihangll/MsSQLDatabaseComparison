@@ -1,0 +1,555 @@
+﻿@page "/tablecolumns"
+
+@inject IDbInfoService DbInfoService
+
+<PageTitle>Table Columns</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbItems"></MudBreadcrumbs>
+
+<MudGrid>
+	<MudItem xs="12" sm="6">
+		<MudAutocomplete T="string" Label="Table Name"
+						 ResetValueOnEmptyText=true
+						 CoerceText=true CoerceValue=false Margin=Margin.Dense Clearable=true IconSize=Size.Small Variant="Variant.Outlined"
+						 AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary"
+						 @bind-Value="_selectedTable" SearchFunc="@(async (x) => TableSearchFunc(x))" />
+	</MudItem>
+	<MudItem xs="12" sm="3">
+		<MudButton Disabled="@_isLoading" OnClick="SearchByTableName" Variant="Variant.Filled" Color="Color.Primary" EndIcon=@Icons.Material.Filled.FilterAlt>
+			@if (_isLoading)
+			{
+				<MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+				<MudText Class="ms-2">Loading...</MudText>
+			}
+			else
+			{
+				<MudText>Filter</MudText>
+			}
+		</MudButton>
+	</MudItem>
+	<MudItem xs="12">
+		<MudTabs Elevation="1" Rounded="true" Border="true" Color="@Color.Primary"
+				 ApplyEffectsToContainer="true" PrevIcon="@Icons.Filled.SkipPrevious" NextIcon="@Icons.Filled.SkipNext">
+			<MudTabPanel Text="Source" BadgeData=@(_isLoading ? "..." : @SourceDbColumns.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="SourceDbColumns" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && SourceDbColumns.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilter(x, _sourceDbColumnSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Source Columns</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_sourceDbColumnSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.DataType)" Title="Data Type" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.CharacterMaximumLength)" Title="Character Maximum Length" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.IsNullable)" Title="Is Nullable" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericPrecision)" Title="Numeric Precision" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericScale)" Title="Numeric Scale" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnDefault)" Title="Column Default" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+			<MudTabPanel Text="Target" BadgeData=@(_isLoading ? "..." : @TargetDbColumns.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="TargetDbColumns" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && TargetDbColumns.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilter(x, _targetDbColumnSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Target Columns</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_targetDbColumnSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.DataType)" Title="Data Type" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.CharacterMaximumLength)" Title="Character Maximum Length" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.IsNullable)" Title="Is Nullable" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericPrecision)" Title="Numeric Precision" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericScale)" Title="Numeric Scale" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnDefault)" Title="Column Default" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+			<MudTabPanel Text="S. Diff Columns" BadgeData=@(_isLoading ? "..." : @SourceDiffDbColumns.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="SourceDiffDbColumns" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && SourceDiffDbColumns.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilter(x, _sourceDiffDbColumnSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Source Diff Columns</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_sourceDiffDbColumnSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.DataType)" Title="Data Type" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.CharacterMaximumLength)" Title="Character Maximum Length" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.IsNullable)" Title="Is Nullable" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericPrecision)" Title="Numeric Precision" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericScale)" Title="Numeric Scale" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnDefault)" Title="Column Default" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+			<MudTabPanel Text="T. Diff Columns" BadgeData=@(_isLoading ? "..." : @TargetDiffDbColumns.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="TargetDiffDbColumns" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && TargetDiffDbColumns.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilter(x, _targetDiffDbColumnSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Target Diff Columns</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_targetDiffDbColumnSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.DataType)" Title="Data Type" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.CharacterMaximumLength)" Title="Character Maximum Length" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.IsNullable)" Title="Is Nullable" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericPrecision)" Title="Numeric Precision" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.NumericScale)" Title="Numeric Scale" />
+						<Column T="DbColumnDto" Field="@nameof(DbColumnDto.ColumnDefault)" Title="Column Default" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+			<MudTabPanel Text="DataType Diff" BadgeData=@(_isLoading ? "..." : @DataTypeDiffDbColumns.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="DataTypeDiffDbColumns" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && DataTypeDiffDbColumns.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilterDataType(x, _dataTypeDiffDbColumnsSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Data Type Diff</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_dataTypeDiffDbColumnsSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnDataTypeDto" Field="@nameof(DbColumnDataTypeDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnDataTypeDto" Field="@nameof(DbColumnDataTypeDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnDataTypeDto" Field="@nameof(DbColumnDataTypeDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnDataTypeDto" Field="@nameof(DbColumnDataTypeDto.SourceDataType)" Title="Source Data Type" />
+						<Column T="DbColumnDataTypeDto" Field="@nameof(DbColumnDataTypeDto.SourceCharacterMaximumLength)" Title="Source Character Maximum Length" />
+						<Column T="DbColumnDataTypeDto" Field="@nameof(DbColumnDataTypeDto.TargetDataType)" Title="Target Data Type" />
+						<Column T="DbColumnDataTypeDto" Field="@nameof(DbColumnDataTypeDto.TargetCharacterMaximumLength)" Title="Target Character Maximum Length" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnDataTypeDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+			<MudTabPanel Text="IsNullable Diff" BadgeData=@(_isLoading ? "..." : @IsNullableDiffDbColumn.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="IsNullableDiffDbColumn" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && IsNullableDiffDbColumn.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilterIsNullable(x, _isNullableDiffDbColumnsSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Is Nullable Diff</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_isNullableDiffDbColumnsSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnIsNullableDto" Field="@nameof(DbColumnIsNullableDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnIsNullableDto" Field="@nameof(DbColumnIsNullableDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnIsNullableDto" Field="@nameof(DbColumnIsNullableDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnIsNullableDto" Field="@nameof(DbColumnIsNullableDto.SourceIsNullable)" Title="Source Is Nullable" />
+						<Column T="DbColumnIsNullableDto" Field="@nameof(DbColumnIsNullableDto.TargerIsNullable)" Title="Target Is Nullable" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnIsNullableDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+			<MudTabPanel Text="Numeric Diff" BadgeData=@(_isLoading ? "..." : @NumericDiffDbColumn.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="NumericDiffDbColumn" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && NumericDiffDbColumn.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilterNumeric(x, _numericDiffDbColumnsSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Numeric Diff</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_numericDiffDbColumnsSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.SourceDataType)" Title="Source Data Type" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.SourceNumericPrecision)" Title="Source Numeric Precision" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.SourceNumericScale)" Title="Source Numeric Scale" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.TargetDataType)" Title="Target Data Type" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.TargetNumericPrecision)" Title="Target Numeric Precision" />
+						<Column T="DbColumnNumericDto" Field="@nameof(DbColumnNumericDto.TargetNumericScale)" Title="Target Numeric Scale" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnNumericDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+			<MudTabPanel Text="Column Default Diff" BadgeData=@(_isLoading ? "..." : @ColumnDefaultDiffDbColumn.Count) BadgeColor="Color.Info">
+				<MudDataGrid Items="ColumnDefaultDiffDbColumn" Elevation="1" Hover=true Bordered=true Dense=true Striped=true
+							 Loading=@(_isLoading && ColumnDefaultDiffDbColumn.Count == 0 ? true : false)
+							 QuickFilter=@((x) => _quickFilterColumnDefault(x, _columnDefaultDiffDbColumnsSearchString))>
+					<ToolBarContent>
+						<MudText Typo="Typo.h6">Column Default Diff</MudText>
+						<MudSpacer />
+						<MudTextField @bind-Value="_columnDefaultDiffDbColumnsSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+									  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+					</ToolBarContent>
+					<Columns>
+						<Column T="DbColumnDefaultDto" Field="@nameof(DbColumnDefaultDto.TableSchema)" Title="Schema" />
+						<Column T="DbColumnDefaultDto" Field="@nameof(DbColumnDefaultDto.TableName)" Title="Table Name" />
+						<Column T="DbColumnDefaultDto" Field="@nameof(DbColumnDefaultDto.ColumnName)" Title="Column Name" />
+						<Column T="DbColumnDefaultDto" Field="@nameof(DbColumnDefaultDto.SourceColumnDefault)" Title="Source Column Default" />
+						<Column T="DbColumnDefaultDto" Field="@nameof(DbColumnDefaultDto.TargetColumnDefault)" Title="Target Column Default" />
+					</Columns>
+					<PagerContent>
+						<MudDataGridPager T="DbColumnDefaultDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+					</PagerContent>
+					<LoadingContent>
+						Loading...
+					</LoadingContent>
+					<NoRecordsContent>
+						No Record
+					</NoRecordsContent>
+				</MudDataGrid>
+			</MudTabPanel>
+		</MudTabs>
+	</MudItem>
+</MudGrid>
+
+@code {
+	private string _selectedTable;
+
+	private List<BreadcrumbItem> _breadcrumbItems = new()
+		{
+			new BreadcrumbItem("Home", href: ""),
+			new BreadcrumbItem("Table Columns", href: null, disabled: true)
+		};
+
+	private bool _isLoading = true;
+
+	private string _sourceDbColumnSearchString;
+	private string _targetDbColumnSearchString;
+	private string _sourceDiffDbColumnSearchString;
+	private string _targetDiffDbColumnSearchString;
+	private string _dataTypeDiffDbColumnsSearchString;
+	private string _isNullableDiffDbColumnsSearchString;
+	private string _numericDiffDbColumnsSearchString;
+	private string _columnDefaultDiffDbColumnsSearchString;
+
+	public IReadOnlyList<DbColumnDto> SourceDbColumns { get; set; } = new List<DbColumnDto>();
+	public IReadOnlyList<DbColumnDto> TargetDbColumns { get; set; } = new List<DbColumnDto>();
+	public IReadOnlyList<DbColumnDto> SourceDiffDbColumns { get; set; } = new List<DbColumnDto>();
+	public IReadOnlyList<DbColumnDto> TargetDiffDbColumns { get; set; } = new List<DbColumnDto>();
+	public IReadOnlyList<DbColumnDataTypeDto> DataTypeDiffDbColumns { get; set; } = new List<DbColumnDataTypeDto>();
+	public IReadOnlyList<DbColumnIsNullableDto> IsNullableDiffDbColumn { get; set; } = new List<DbColumnIsNullableDto>();
+	public IReadOnlyList<DbColumnNumericDto> NumericDiffDbColumn { get; set; } = new List<DbColumnNumericDto>();
+	public IReadOnlyList<DbColumnDefaultDto> ColumnDefaultDiffDbColumn { get; set; } = new List<DbColumnDefaultDto>();
+
+	public IReadOnlyList<string> TableNames { get; set; } = new List<string>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		TableNames = await DbInfoService.GetAllTableNamesAsync();
+
+		SourceDbColumns = await DbInfoService.GetDbColumnsAsync(isSourceDb: true);
+		TargetDbColumns = await DbInfoService.GetDbColumnsAsync(isSourceDb: false);
+		LoadDiffTables();
+
+		_isLoading = false;
+	}
+
+	void LoadDiffTables()
+	{
+		SourceDiffDbColumns = SourceDbColumns.Where(x => TargetDbColumns.Where(y => y.TableSchema == x.TableSchema && y.TableName == x.TableName).All(y => y.ColumnName != x.ColumnName)).ToList();
+		TargetDiffDbColumns = TargetDbColumns.Where(x => SourceDbColumns.Where(y => y.TableSchema == x.TableSchema && y.TableName == x.TableName).All(y => y.ColumnName != x.ColumnName)).ToList();
+
+		DataTypeDiffDbColumns = (
+			from s in SourceDbColumns
+			join t in TargetDbColumns on new { s.TableSchema, s.TableName, s.ColumnName } equals new { t.TableSchema, t.TableName, t.ColumnName }
+			where s.DataType != t.DataType || s.CharacterMaximumLength != t.CharacterMaximumLength
+			select new DbColumnDataTypeDto
+				{
+					TableSchema = s.TableSchema,
+					TableName = s.TableName,
+					ColumnName = s.ColumnName,
+					SourceDataType = s.DataType,
+					SourceCharacterMaximumLength = s.CharacterMaximumLength,
+					TargetDataType = t.DataType,
+					TargetCharacterMaximumLength = t.CharacterMaximumLength
+				}).ToList();
+
+		IsNullableDiffDbColumn = (
+			from s in SourceDbColumns
+			join t in TargetDbColumns on new { s.TableSchema, s.TableName, s.ColumnName } equals new { t.TableSchema, t.TableName, t.ColumnName }
+			where s.IsNullable != t.IsNullable
+			select new DbColumnIsNullableDto
+				{
+					TableSchema = s.TableSchema,
+					TableName = s.TableName,
+					ColumnName = s.ColumnName,
+					SourceIsNullable = s.IsNullable,
+					TargerIsNullable = t.IsNullable
+				}).ToList();
+
+		NumericDiffDbColumn = (
+			from s in SourceDbColumns
+			join t in TargetDbColumns on new { s.TableSchema, s.TableName, s.ColumnName } equals new { t.TableSchema, t.TableName, t.ColumnName }
+			where s.NumericPrecision != t.NumericPrecision || s.NumericScale != t.NumericScale
+			select new DbColumnNumericDto
+				{
+					TableSchema = s.TableSchema,
+					TableName = s.TableName,
+					ColumnName = s.ColumnName,
+					SourceDataType = s.DataType,
+					SourceNumericPrecision = s.NumericPrecision,
+					SourceNumericScale = s.NumericScale,
+					TargetDataType = t.DataType,
+					TargetNumericPrecision = t.NumericPrecision,
+					TargetNumericScale = t.NumericScale
+				}).ToList();
+
+		ColumnDefaultDiffDbColumn = (
+			from s in SourceDbColumns
+			join t in TargetDbColumns on new { s.TableSchema, s.TableName, s.ColumnName } equals new { t.TableSchema, t.TableName, t.ColumnName }
+			where s.ColumnDefault != t.ColumnDefault
+			select new DbColumnDefaultDto
+				{
+					TableSchema = s.TableSchema,
+					TableName = s.TableName,
+					ColumnName = s.ColumnName,
+					SourceColumnDefault = s.ColumnDefault,
+					TargetColumnDefault = t.ColumnDefault
+				}).ToList();
+	}
+
+	async Task SearchByTableName()
+	{
+		_isLoading = true;
+
+		SourceDbColumns = new List<DbColumnDto>();
+		TargetDbColumns = new List<DbColumnDto>();
+		await Task.Delay(100);
+		//Just to show snapshot in UI...
+		StateHasChanged();
+
+		SourceDbColumns = await DbInfoService.GetDbColumnsAsync(isSourceDb: true, tableName: _selectedTable);
+		TargetDbColumns = await DbInfoService.GetDbColumnsAsync(isSourceDb: false, tableName: _selectedTable);
+		LoadDiffTables();
+
+		_isLoading = false;
+	}
+
+	private IEnumerable<string> TableSearchFunc(string value)
+	{
+		if (string.IsNullOrEmpty(value))
+		{
+			return TableNames;
+		}
+
+		return TableNames.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+	}
+
+	private Func<DbColumnDto, string, bool> _quickFilter => (x, searchString) =>
+	{
+		if (string.IsNullOrWhiteSpace(searchString))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableSchema) && x.TableSchema.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableName) && x.TableName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.ColumnName) && x.ColumnName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.DataType) && x.DataType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.IsNullable) && x.IsNullable.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (x.CharacterMaximumLength.HasValue && x.CharacterMaximumLength.ToString().Contains(searchString))
+			return true;
+
+		if (x.NumericPrecision.HasValue && x.NumericPrecision.ToString().Contains(searchString))
+			return true;
+
+		if (x.NumericScale.HasValue && x.NumericScale.ToString().Contains(searchString))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.ColumnDefault) && x.ColumnDefault.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbColumnDataTypeDto, string, bool> _quickFilterDataType => (x, searchString) =>
+	{
+		if (string.IsNullOrWhiteSpace(searchString))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableSchema) && x.TableSchema.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableName) && x.TableName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.ColumnName) && x.ColumnName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.SourceDataType) && x.SourceDataType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TargetDataType) && x.TargetDataType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+
+	private Func<DbColumnIsNullableDto, string, bool> _quickFilterIsNullable => (x, searchString) =>
+	{
+		if (string.IsNullOrWhiteSpace(searchString))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableSchema) && x.TableSchema.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableName) && x.TableName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.ColumnName) && x.ColumnName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.SourceIsNullable) && x.SourceIsNullable.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TargerIsNullable) && x.TargerIsNullable.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbColumnDefaultDto, string, bool> _quickFilterColumnDefault => (x, searchString) =>
+	{
+		if (string.IsNullOrWhiteSpace(searchString))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableSchema) && x.TableSchema.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableName) && x.TableName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.ColumnName) && x.ColumnName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.SourceColumnDefault) && x.SourceColumnDefault.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TargetColumnDefault) && x.TargetColumnDefault.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbColumnNumericDto, string, bool> _quickFilterNumeric => (x, searchString) =>
+	{
+		if (string.IsNullOrWhiteSpace(searchString))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableSchema) && x.TableSchema.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TableName) && x.TableName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.ColumnName) && x.ColumnName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.SourceDataType) && x.SourceDataType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (x.SourceNumericPrecision.HasValue && x.SourceNumericPrecision.ToString().Contains(searchString))
+			return true;
+
+		if (x.SourceNumericScale.HasValue && x.SourceNumericScale.ToString().Contains(searchString))
+			return true;
+
+		if (!string.IsNullOrEmpty(x.TargetDataType) && x.TargetDataType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		if (x.TargetNumericPrecision.HasValue && x.TargetNumericPrecision.ToString().Contains(searchString))
+			return true;
+
+		if (x.TargetNumericScale.HasValue && x.TargetNumericScale.ToString().Contains(searchString))
+			return true;
+
+		return false;
+	};
+}

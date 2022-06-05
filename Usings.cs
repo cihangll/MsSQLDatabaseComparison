@@ -1,0 +1,9 @@
+﻿global using Dapper;
+global using Microsoft.Extensions.Caching.Memory;
+global using MsSQLDatabaseComparison.Data;
+global using MsSQLDatabaseComparison.DbContexts;
+global using MsSQLDatabaseComparison.Entities;
+global using MsSQLDatabaseComparison.Services;
+global using MudBlazor.Services;
+global using System.Data;
+global using System.Data.SqlClient;

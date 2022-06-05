@@ -1,0 +1,174 @@
+﻿@page "/functions"
+
+@inject IDbInfoService DbInfoService
+
+<PageTitle>Functions</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbItems"></MudBreadcrumbs>
+
+<MudTabs Elevation="1" Outlined="true" Position="Position.Top" Rounded="true" Border="true" Color="@Color.Primary"
+		 ApplyEffectsToContainer="true">
+	<MudTabPanel Text="Source" BadgeData=@(_isLoading ? "..." : @SourceFunctions.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="SourceFunctions" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && SourceFunctions.Count == 0 ? true : false) QuickFilter="@_sourceQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Source Functions</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_sourceFunctionSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="Stored Procedure Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Target" BadgeData=@(_isLoading ? "..." : @TargetFunctions.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="TargetFunctions" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && TargetFunctions.Count == 0 ? true : false) QuickFilter="@_targetQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Target Functions</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_targetFunctionSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="Stored Procedure Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Source Diff" BadgeData=@(_isLoading ? "..." : @SourceDiffFunctions.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="SourceDiffFunctions" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && SourceDiffFunctions.Count == 0 ? true : false) QuickFilter="@_sourceDiffQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Source Diff Functions</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_sourceDiffFunctionSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="Stored Procedure Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Target Diff" BadgeData=@(_isLoading ? "..." : @TargetDiffFunctions.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="TargetDiffFunctions" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && TargetDiffFunctions.Count == 0 ? true : false) QuickFilter="@_targetDiffQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Target Diff Functions</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_targetDiffFunctionSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="Stored Procedure Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+</MudTabs>
+
+@code {
+
+	private List<BreadcrumbItem> _breadcrumbItems = new()
+		{
+			new BreadcrumbItem("Home", href: ""),
+			new BreadcrumbItem("Functions", href: null, disabled: true)
+		};
+
+	private bool _isLoading = true;
+
+	private string _sourceFunctionSearchString;
+	private string _targetFunctionSearchString;
+	private string _sourceDiffFunctionSearchString;
+	private string _targetDiffFunctionSearchString;
+
+	public IReadOnlyList<DbObjectDto> SourceFunctions { get; set; } = new List<DbObjectDto>();
+	public IReadOnlyList<DbObjectDto> TargetFunctions { get; set; } = new List<DbObjectDto>();
+	public IReadOnlyList<DbObjectDto> SourceDiffFunctions { get; set; } = new List<DbObjectDto>();
+	public IReadOnlyList<DbObjectDto> TargetDiffFunctions { get; set; } = new List<DbObjectDto>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		SourceFunctions = await DbInfoService.GetFunctionsAsync(isSourceDb: true);
+		TargetFunctions = await DbInfoService.GetFunctionsAsync(isSourceDb: false);
+		SourceDiffFunctions = SourceFunctions.Where(x => TargetFunctions.All(y => y.Name != x.Name)).ToList();
+		TargetDiffFunctions = TargetFunctions.Where(x => SourceFunctions.All(y => y.Name != x.Name)).ToList();
+
+		_isLoading = false;
+	}
+
+	private Func<DbObjectDto, bool> _sourceQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_sourceFunctionSearchString))
+			return true;
+
+		if (x.Name.Contains(_sourceFunctionSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbObjectDto, bool> _targetQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_targetFunctionSearchString))
+			return true;
+
+		if (x.Name.Contains(_targetFunctionSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbObjectDto, bool> _sourceDiffQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_sourceDiffFunctionSearchString))
+			return true;
+
+		if (x.Name.Contains(_sourceDiffFunctionSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbObjectDto, bool> _targetDiffQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_targetDiffFunctionSearchString))
+			return true;
+
+		if (x.Name.Contains(_targetDiffFunctionSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+}

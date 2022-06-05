@@ -1,0 +1,178 @@
+﻿@page "/tables"
+
+@inject IDbInfoService DbInfoService
+
+<PageTitle>Tables</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbItems"></MudBreadcrumbs>
+
+<MudTabs Elevation="1" Outlined="true" Position="Position.Top" Rounded="true" Border="true" Color="@Color.Primary"
+		 ApplyEffectsToContainer="true">
+	<MudTabPanel Text="Source" BadgeData=@(_isLoading ? "..." : @SourceTables.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="SourceTables" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && SourceTables.Count == 0 ? true : false) QuickFilter="@_sourceQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Source Tables</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_sourceTableSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableSchema)" Title="Table Schema" />
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableName)" Title="Table Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbTableDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Target" BadgeData=@(_isLoading ? "..." : @TargetTables.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="TargetTables" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && TargetTables.Count == 0 ? true : false) QuickFilter="@_targetQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Target Tables</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_targetTableSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableSchema)" Title="Table Schema" />
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableName)" Title="Table Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbTableDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Source Diff" BadgeData=@(_isLoading ? "..." : @SourceDiffTables.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="SourceDiffTables" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && SourceDiffTables.Count == 0 ? true : false) QuickFilter="@_sourceDiffQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Source Diff Tables</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_sourceDiffTableSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableSchema)" Title="Table Schema" />
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableName)" Title="Table Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbTableDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Target Diff" BadgeData=@(_isLoading ? "..." : @TargetDiffTables.Count) BadgeColor="Color.Info">
+		<MudDataGrid Items="TargetDiffTables" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && TargetDiffTables.Count == 0 ? true : false) QuickFilter="@_targetDiffQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Target Diff Tables</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_targetDiffTableSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableSchema)" Title="Table Schema" />
+				<Column T="DbTableDto" Field="@nameof(DbTableDto.TableName)" Title="Table Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbTableDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+</MudTabs>
+
+@code {
+
+	private List<BreadcrumbItem> _breadcrumbItems = new()
+		{
+			new BreadcrumbItem("Home", href: ""),
+			new BreadcrumbItem("Tables", href: null, disabled: true)
+		};
+
+	private bool _isLoading = true;
+
+	private string _sourceTableSearchString;
+	private string _targetTableSearchString;
+	private string _sourceDiffTableSearchString;
+	private string _targetDiffTableSearchString;
+
+	public IReadOnlyList<DbTableDto> SourceTables { get; set; } = new List<DbTableDto>();
+	public IReadOnlyList<DbTableDto> TargetTables { get; set; } = new List<DbTableDto>();
+	public IReadOnlyList<DbTableDto> SourceDiffTables { get; set; } = new List<DbTableDto>();
+	public IReadOnlyList<DbTableDto> TargetDiffTables { get; set; } = new List<DbTableDto>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		SourceTables = await DbInfoService.GetTablesAsync(isSourceDb: true);
+		TargetTables = await DbInfoService.GetTablesAsync(isSourceDb: false);
+		SourceDiffTables = SourceTables.Where(x => TargetTables.All(y => y.TableSchema != x.TableSchema || y.TableName != x.TableName)).ToList();
+		TargetDiffTables = TargetTables.Where(x => SourceTables.All(y => y.TableSchema != x.TableSchema || y.TableName != x.TableName)).ToList();
+
+		_isLoading = false;
+	}
+
+	private Func<DbTableDto, bool> _sourceQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_sourceTableSearchString))
+			return true;
+
+		if (x.TableName.Contains(_sourceTableSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbTableDto, bool> _targetQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_targetTableSearchString))
+			return true;
+
+		if (x.TableName.Contains(_targetTableSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbTableDto, bool> _sourceDiffQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_sourceDiffTableSearchString))
+			return true;
+
+		if (x.TableName.Contains(_sourceDiffTableSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbTableDto, bool> _targetDiffQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_targetDiffTableSearchString))
+			return true;
+
+		if (x.TableName.Contains(_targetDiffTableSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+}

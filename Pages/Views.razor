@@ -1,0 +1,174 @@
+﻿@page "/views"
+
+@inject IDbInfoService DbInfoService
+
+<PageTitle>Views</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbItems"></MudBreadcrumbs>
+
+<MudTabs Elevation="1" Outlined="true" Position="Position.Top" Rounded="true" Border="true" Color="@Color.Primary"
+		 ApplyEffectsToContainer="true">
+	<MudTabPanel Text="Source" BadgeData='@SourceViews.Count' BadgeColor="Color.Info">
+		<MudDataGrid Items="SourceViews" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && SourceViews.Count == 0 ? true : false) QuickFilter="@_sourceQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Source Views</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_sourceViewSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="View Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Target" BadgeData='@TargetViews.Count' BadgeColor="Color.Info">
+		<MudDataGrid Items="TargetViews" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && TargetViews.Count == 0 ? true : false) QuickFilter="@_targetQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Target Views</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_targetViewSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="View Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Source Diff" BadgeData='@SourceDiffViews.Count' BadgeColor="Color.Info">
+		<MudDataGrid Items="SourceDiffViews" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && SourceDiffViews.Count == 0 ? true : false) QuickFilter="@_sourceDiffQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Source Diff Views</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_sourceDiffViewSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="View Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+	<MudTabPanel Text="Target Diff" BadgeData='@TargetDiffViews.Count' BadgeColor="Color.Info">
+		<MudDataGrid Items="TargetDiffViews" Elevation="1" Hover=true Bordered=true Dense=true Striped=true Loading=@(_isLoading && TargetDiffViews.Count == 0 ? true : false) QuickFilter="@_targetDiffQuickFilter">
+			<ToolBarContent>
+				<MudText Typo="Typo.h6">Target Diff Views</MudText>
+				<MudSpacer />
+				<MudTextField @bind-Value="_targetDiffViewSearchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+							  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+			</ToolBarContent>
+			<Columns>
+				<Column T="DbObjectDto" Field="@nameof(DbObjectDto.Name)" Title="View Name" />
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="DbObjectDto" PageSizeOptions="new int[]{5, 10, 20, 50}" />
+			</PagerContent>
+			<LoadingContent>
+				Loading...
+			</LoadingContent>
+			<NoRecordsContent>
+				No Record
+			</NoRecordsContent>
+		</MudDataGrid>
+	</MudTabPanel>
+</MudTabs>
+
+@code {
+
+	private List<BreadcrumbItem> _breadcrumbItems = new()
+		{
+			new BreadcrumbItem("Home", href: ""),
+			new BreadcrumbItem("Views", href: null, disabled: true)
+		};
+
+	private bool _isLoading = true;
+
+	private string _sourceViewSearchString;
+	private string _targetViewSearchString;
+	private string _sourceDiffViewSearchString;
+	private string _targetDiffViewSearchString;
+
+	public IReadOnlyList<DbObjectDto> SourceViews { get; set; } = new List<DbObjectDto>();
+	public IReadOnlyList<DbObjectDto> TargetViews { get; set; } = new List<DbObjectDto>();
+	public IReadOnlyList<DbObjectDto> SourceDiffViews { get; set; } = new List<DbObjectDto>();
+	public IReadOnlyList<DbObjectDto> TargetDiffViews { get; set; } = new List<DbObjectDto>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		SourceViews = await DbInfoService.GetViewsAsync(isSourceDb: true);
+		TargetViews = await DbInfoService.GetViewsAsync(isSourceDb: false);
+		SourceDiffViews = SourceViews.Where(x => TargetViews.All(y => y.Name != x.Name)).ToList();
+		TargetDiffViews = TargetViews.Where(x => SourceViews.All(y => y.Name != x.Name)).ToList();
+
+		_isLoading = false;
+	}
+
+	private Func<DbObjectDto, bool> _sourceQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_sourceViewSearchString))
+			return true;
+
+		if (x.Name.Contains(_sourceViewSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbObjectDto, bool> _targetQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_targetViewSearchString))
+			return true;
+
+		if (x.Name.Contains(_targetViewSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbObjectDto, bool> _sourceDiffQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_sourceDiffViewSearchString))
+			return true;
+
+		if (x.Name.Contains(_sourceDiffViewSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+
+	private Func<DbObjectDto, bool> _targetDiffQuickFilter => x =>
+	{
+		if (string.IsNullOrWhiteSpace(_targetDiffViewSearchString))
+			return true;
+
+		if (x.Name.Contains(_targetDiffViewSearchString, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return false;
+	};
+}

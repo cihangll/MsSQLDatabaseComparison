@@ -1,0 +1,106 @@
+﻿@page "/"
+@page "/home"
+
+@inject IDbInfoService DbInfoService
+
+<PageTitle>Home</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">MsSQL Database Comparer</MudText>
+
+<MudGrid>
+	<MudItem xs="12" sm="6" md="3">
+		<MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+			<MudIcon Icon="@Icons.Material.Filled.ViewList" Color="Color.Primary" Class="mx-4"
+					 Style="width:54px; height:54px;"></MudIcon>
+			<div>
+				<MudLink Href="tables"><MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Tables</MudText></MudLink>
+				<MudText Typo="Typo.h5">@_info.SourceTableCount - @_info.TargetTableCount</MudText>
+			</div>
+		</MudPaper>
+	</MudItem>
+	<MudItem xs="12" sm="6" md="3">
+		<MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+			<MudIcon Icon="@Icons.Material.Filled.List" Color="Color.Success" Class="mx-4"
+					 Style="width:54px; height:54px;"></MudIcon>
+			<div>
+				<MudLink Href="views"><MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Views</MudText></MudLink>
+				<MudText Typo="Typo.h5">@_info.SourceViewCount - @_info.TargetViewCount</MudText>
+			</div>
+		</MudPaper>
+	</MudItem>
+	<MudItem xs="12" sm="6" md="3">
+		<MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+			<MudIcon Icon="@Icons.Material.Filled.TableView" Color="Color.Warning" Class="mx-4"
+					 Style="width:54px; height:54px;"></MudIcon>
+			<div>
+				<MudLink Href="storedprocedures"><MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Stored Procedures</MudText></MudLink>
+				<MudText Typo="Typo.h5">@_info.SourceStoredProcedureCount - @_info.TargetStoredProcedureCount</MudText>
+			</div>
+		</MudPaper>
+	</MudItem>
+	<MudItem xs="12" sm="6" md="3">
+		<MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+			<MudIcon Icon="@Icons.Material.Filled.Functions" Color="Color.Secondary" Class="mx-4"
+					 Style="width:54px; height:54px;"></MudIcon>
+			<div>
+				<MudLink Href="functions"><MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Functions</MudText></MudLink>
+				<MudText Typo="Typo.h5">@_info.SourceFunctionCount - @_info.TargetFunctionCount</MudText>
+			</div>
+		</MudPaper>
+	</MudItem>
+	<MudItem xs="12" sm="6" md="3">
+		<MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+			<MudIcon Icon="@Icons.Material.Filled.PublishedWithChanges" Color="Color.Error" Class="mx-4"
+					 Style="width:54px; height:54px;"></MudIcon>
+			<div>
+				<MudLink Href="tablecolumns"><MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Table Columns</MudText></MudLink>
+				<MudText Typo="Typo.h5">@_info.SourceColumnCount - @_info.TargetColumnCount</MudText>
+			</div>
+		</MudPaper>
+	</MudItem>
+	<MudItem xs="12" sm="6" md="3">
+		<MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4" Style="height:100px;">
+			<MudIcon Icon="@Icons.Material.Filled.Refresh" Color="Color.Error" Class="mx-4"
+					 Style="width:54px; height:54px;"></MudIcon>
+			<div>
+				<MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Refresh All Data</MudText>
+
+				<MudButton Disabled="@_processing" OnClick="RefreshCacheData" Variant="Variant.Outlined" Color="Color.Primary">
+					@if (_processing)
+					{
+						<MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+						<MudText Class="ms-2">Processing</MudText>
+					}
+					else
+					{
+						<MudText>Click me</MudText>
+					}
+				</MudButton>
+			</div>
+		</MudPaper>
+	</MudItem>
+</MudGrid>
+
+@code {
+
+	private bool _processing = false;
+
+	async Task RefreshCacheData()
+	{
+		_processing = true;
+		_info = new DashboardInfoDto();
+		StateHasChanged();
+
+		DbInfoService.RefreshAllCache();
+		_info = await DbInfoService.GetDashboardInfoDtoAsync();
+		_processing = false;
+	}
+
+
+	private DashboardInfoDto _info = new DashboardInfoDto { };
+
+	protected override async Task OnInitializedAsync()
+	{
+		_info = await DbInfoService.GetDashboardInfoDtoAsync();
+	}
+}
